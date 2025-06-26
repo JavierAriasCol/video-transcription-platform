@@ -120,18 +120,58 @@ def transcribe_audio(audio_path: str, language: str):
         raise HTTPException(status_code=500, detail=f"Error en transcripción: {str(e)}")
 
 def create_vtt_file(transcription_result, output_path: str):
-    """Convierte la transcripción a formato VTT"""
+    """Convierte la transcripción a formato VTT con máximo 5 palabras por segmento"""
     try:
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write("WEBVTT\n\n")
             
+            segment_counter = 1
+            
             for segment in transcription_result['segments']:
-                start_time = format_timestamp(segment['start'])
-                end_time = format_timestamp(segment['end'])
+                start_time_seconds = segment['start']
+                end_time_seconds = segment['end']
                 text = segment['text'].strip()
                 
-                f.write(f"{start_time} --> {end_time}\n")
-                f.write(f"{text}\n\n")
+                # Dividir el texto en palabras
+                words = text.split()
+                
+                # Si el segmento tiene 5 palabras o menos, mantenerlo como está
+                if len(words) <= 5:
+                    start_time = format_timestamp(start_time_seconds)
+                    end_time = format_timestamp(end_time_seconds)
+                    
+                    f.write(f"{segment_counter}\n")
+                    f.write(f"{start_time} --> {end_time}\n")
+                    f.write(f"{text}\n\n")
+                    segment_counter += 1
+                else:
+                    # Dividir en sub-segmentos de máximo 5 palabras
+                    segment_duration = end_time_seconds - start_time_seconds
+                    total_words = len(words)
+                    
+                    # Crear sub-segmentos
+                    for i in range(0, total_words, 5):
+                        # Obtener las palabras para este sub-segmento
+                        sub_words = words[i:i+5]
+                        sub_text = ' '.join(sub_words)
+                        
+                        # Calcular timestamps proporcionales
+                        words_in_subsegment = len(sub_words)
+                        words_processed = i
+                        
+                        # Calcular tiempo de inicio y fin proporcional
+                        sub_start = start_time_seconds + (words_processed / total_words) * segment_duration
+                        sub_end = start_time_seconds + ((words_processed + words_in_subsegment) / total_words) * segment_duration
+                        
+                        # Formatear timestamps
+                        sub_start_formatted = format_timestamp(sub_start)
+                        sub_end_formatted = format_timestamp(sub_end)
+                        
+                        # Escribir sub-segmento
+                        f.write(f"{segment_counter}\n")
+                        f.write(f"{sub_start_formatted} --> {sub_end_formatted}\n")
+                        f.write(f"{sub_text}\n\n")
+                        segment_counter += 1
                 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creando archivo VTT: {str(e)}")
@@ -195,7 +235,7 @@ async def transcribe_video(
             "message": "Transcripción completada exitosamente",
             "duration": round(duration, 2),
             "language": language,
-            "segments_count": len(transcription['segments']),
+            "original_segments_count": len(transcription['segments']),
             "download_url": f"/download/{vtt_filename}"
         }
         
