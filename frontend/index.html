@@ -1,174 +1,142 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Transcripción de Videos a VTT</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <h1>🎥 Transcripción de Videos</h1>
-            <p>Convierte tus videos a subtítulos VTT usando Whisper AI</p>
-        </header>
+      <header>
+        <h1>🎥 Transcripción de Videos</h1>
+        <p>Convierte tus videos a subtítulos VTT usando Whisper AI</p>
+      </header>
 
-        <main>
-            <div class="upload-section">
-                <div class="upload-card">
-                    <h2>Subir Video</h2>
-                    
-                    <!-- Selector de idioma de entrada -->
-                    <div class="language-selector">
-                        <label for="language">Idioma del video (entrada):</label>
-                        <select id="language" required>
-                            <option value="">Selecciona un idioma</option>
-                            <option value="auto">🔍 Detectar automáticamente</option>
-                            <option value="spanish">🇪🇸 Español</option>
-                            <option value="english">🇺🇸 English</option>
-                            <option value="french">🇫🇷 Français</option>
-                            <option value="german">🇩🇪 Deutsch</option>
-                            <option value="italian">🇮🇹 Italiano</option>
-                            <option value="portuguese">🇵🇹 Português</option>
-                            <option value="russian">🇷🇺 Русский</option>
-                            <option value="japanese">🇯🇵 日本語</option>
-                            <option value="korean">🇰🇷 한국어</option>
-                            <option value="chinese">🇨🇳 中文</option>
-                        </select>
-                    </div>
+      <main>
+        <div class="upload-section">
+          <div class="upload-card">
+            <h2>Subir Video</h2>
 
-                    <!-- Selector de idioma de salida -->
-                    <div class="language-selector">
-                        <label for="outputLanguage">Idioma de salida (opcional):</label>
-                        <select id="outputLanguage">
-                            <option value="">Sin traducción</option>
-                            <option value="spanish">🇪🇸 Español</option>
-                            <option value="english">🇺🇸 English</option>
-                            <option value="french">🇫🇷 Français</option>
-                            <option value="german">🇩🇪 Deutsch</option>
-                            <option value="italian">🇮🇹 Italiano</option>
-                            <option value="portuguese">🇵🇹 Português</option>
-                            <option value="russian">🇷🇺 Русский</option>
-                            <option value="japanese">🇯🇵 日本語</option>
-                            <option value="korean">🇰🇷 한국어</option>
-                            <option value="chinese">🇨🇳 中文</option>
-                        </select>
-                        <small class="translation-note">Si seleccionas un idioma diferente al de entrada, se traducirán los subtítulos</small>
-                    </div>
-
-                    <!-- Área de upload -->
-                    <div class="upload-area" id="uploadArea">
-                        <div class="upload-content">
-                            <div class="upload-icon">📁</div>
-                            <p>Arrastra tu video aquí o haz clic para seleccionar</p>
-                            <p class="upload-hint">Máximo 5 minutos • Formatos: MP4, AVI, MOV, MKV</p>
-                        </div>
-                        <input type="file" id="videoFile" accept="video/*" hidden>
-                    </div>
-
-                    <!-- Información del archivo -->
-                    <div class="file-info" id="fileInfo" style="display: none;">
-                        <div class="file-details">
-                            <span class="file-name" id="fileName"></span>
-                            <span class="file-size" id="fileSize"></span>
-                            <span class="file-duration" id="fileDuration"></span>
-                        </div>
-                        <button class="remove-file" id="removeFile">✕</button>
-                    </div>
-
-                    <!-- Botón de transcripción -->
-                    <button class="transcribe-btn" id="transcribeBtn" disabled>
-                        <span class="btn-text">Transcribir Video</span>
-                        <span class="btn-loader" style="display: none;">⏳</span>
-                    </button>
-                </div>
+            <!-- Selector de idioma -->
+            <div class="language-selector">
+              <label for="language">Idioma del video:</label>
+              <select id="language" required>
+                <option value="">Selecciona un idioma</option>
+                <option value="spanish">🇪🇸 Español</option>
+                <option value="english">🇺🇸 English</option>
+              </select>
             </div>
 
-            <!-- Sección de progreso -->
-            <div class="progress-section" id="progressSection" style="display: none;">
-                <div class="progress-card">
-                    <h3>Procesando...</h3>
-                    <div class="progress-steps">
-                        <div class="step" id="step1">
-                            <div class="step-icon">📤</div>
-                            <span>Subiendo video</span>
-                        </div>
-                        <div class="step" id="step2">
-                            <div class="step-icon">🎵</div>
-                            <span>Extrayendo audio</span>
-                        </div>
-                        <div class="step" id="step3">
-                            <div class="step-icon">🤖</div>
-                            <span>Transcribiendo con Whisper</span>
-                        </div>
-                        <div class="step" id="step4">
-                            <div class="step-icon">🌐</div>
-                            <span>Traduciendo texto</span>
-                        </div>
-                        <div class="step" id="step5">
-                            <div class="step-icon">📝</div>
-                            <span>Generando VTT</span>
-                        </div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <p class="progress-text" id="progressText">Iniciando...</p>
-                </div>
+            <!-- Área de upload -->
+            <div class="upload-area" id="uploadArea">
+              <div class="upload-content">
+                <div class="upload-icon">📁</div>
+                <p>Arrastra tu video aquí o haz clic para seleccionar</p>
+                <p class="upload-hint">
+                  Máximo 2 minutos • Formatos: MP4, AVI, MOV, MKV
+                </p>
+              </div>
+              <input type="file" id="videoFile" accept="video/*" hidden />
             </div>
 
-            <!-- Sección de resultados -->
-            <div class="results-section" id="resultsSection" style="display: none;">
-                <div class="results-card">
-                    <h3>✅ Transcripción Completada</h3>
-                    <div class="results-info">
-                        <div class="info-item">
-                            <span class="info-label">Duración:</span>
-                            <span class="info-value" id="resultDuration"></span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Idioma entrada:</span>
-                            <span class="info-value" id="resultInputLanguage"></span>
-                        </div>
-                        <div class="info-item" id="outputLanguageInfo" style="display: none;">
-                            <span class="info-label">Idioma salida:</span>
-                            <span class="info-value" id="resultOutputLanguage"></span>
-                        </div>
-                        <div class="info-item" id="translationInfo" style="display: none;">
-                            <span class="info-label">Traducido:</span>
-                            <span class="info-value">✅ Sí</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Segmentos:</span>
-                            <span class="info-value" id="resultSegments"></span>
-                        </div>
-                    </div>
-                    <div class="results-actions">
-                        <button class="download-btn" id="downloadBtn">
-                            📥 Descargar VTT
-                        </button>
-                        <button class="new-transcription-btn" id="newTranscriptionBtn">
-                            🔄 Nueva Transcripción
-                        </button>
-                    </div>
-                </div>
+            <!-- Información del archivo -->
+            <div class="file-info" id="fileInfo" style="display: none">
+              <div class="file-details">
+                <span class="file-name" id="fileName"></span>
+                <span class="file-size" id="fileSize"></span>
+                <span class="file-duration" id="fileDuration"></span>
+              </div>
+              <button class="remove-file" id="removeFile">✕</button>
             </div>
 
-            <!-- Sección de error -->
-            <div class="error-section" id="errorSection" style="display: none;">
-                <div class="error-card">
-                    <h3>❌ Error en la Transcripción</h3>
-                    <p class="error-message" id="errorMessage"></p>
-                    <button class="retry-btn" id="retryBtn">🔄 Intentar de Nuevo</button>
-                </div>
-            </div>
-        </main>
+            <!-- Botón de transcripción -->
+            <button class="transcribe-btn" id="transcribeBtn" disabled>
+              <span class="btn-text">Transcribir Video</span>
+              <span class="btn-loader" style="display: none">⏳</span>
+            </button>
+          </div>
+        </div>
 
-        <footer>
-            <p>Powered by OpenAI Whisper • Procesamiento local y privado</p>
-        </footer>
+        <!-- Sección de progreso -->
+        <div
+          class="progress-section"
+          id="progressSection"
+          style="display: none"
+        >
+          <div class="progress-card">
+            <h3>Procesando...</h3>
+            <div class="progress-steps">
+              <div class="step" id="step1">
+                <div class="step-icon">📤</div>
+                <span>Subiendo video</span>
+              </div>
+              <div class="step" id="step2">
+                <div class="step-icon">🎵</div>
+                <span>Extrayendo audio</span>
+              </div>
+              <div class="step" id="step3">
+                <div class="step-icon">🤖</div>
+                <span>Transcribiendo con Whisper</span>
+              </div>
+              <div class="step" id="step4">
+                <div class="step-icon">📝</div>
+                <span>Generando VTT</span>
+              </div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-text" id="progressText">Iniciando...</p>
+          </div>
+        </div>
+
+        <!-- Sección de resultados -->
+        <div class="results-section" id="resultsSection" style="display: none">
+          <div class="results-card">
+            <h3>✅ Transcripción Completada</h3>
+            <div class="results-info">
+              <div class="info-item">
+                <span class="info-label">Duración:</span>
+                <span class="info-value" id="resultDuration"></span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Idioma:</span>
+                <span class="info-value" id="resultLanguage"></span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Segmentos:</span>
+                <span class="info-value" id="resultSegments"></span>
+              </div>
+            </div>
+            <div class="results-actions">
+              <button class="download-btn" id="downloadBtn">
+                📥 Descargar VTT
+              </button>
+              <button class="new-transcription-btn" id="newTranscriptionBtn">
+                🔄 Nueva Transcripción
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección de error -->
+        <div class="error-section" id="errorSection" style="display: none">
+          <div class="error-card">
+            <h3>❌ Error en la Transcripción</h3>
+            <p class="error-message" id="errorMessage"></p>
+            <button class="retry-btn" id="retryBtn">
+              🔄 Intentar de Nuevo
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <p>Powered by OpenAI Whisper • Procesamiento local y privado</p>
+      </footer>
     </div>
 
     <script src="script.js"></script>
-</body>
+  </body>
 </html>

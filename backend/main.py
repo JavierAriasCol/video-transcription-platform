@@ -9,20 +9,13 @@ from pathlib import Path
 from datetime import datetime
 import uvicorn
 import subprocess
-import sys
-from openai import OpenAI
-from dotenv import load_dotenv
-import json
 
-# Cargar variables de entorno
-load_dotenv()
-
-app = FastAPI(title="Video Transcription API", version="2.0.0")
+app = FastAPI(title="Video Transcription API", version="1.0.0")
 
 # Configurar CORS para permitir requests desde el frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "null"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,21 +29,6 @@ TEMP_DIR.mkdir(exist_ok=True)
 print("Cargando modelo Whisper...")
 model = whisper.load_model("small")
 print("Modelo Whisper 'small' cargado exitosamente")
-
-# Configurar OpenAI para traducción
-openai_client = None
-translation_enabled = False
-
-try:
-    api_key = os.getenv("OPENAI_API_KEY")
-    if api_key and api_key != "tu_api_key_aqui":
-        openai_client = OpenAI(api_key=api_key)
-        translation_enabled = True
-        print("✅ OpenAI configurado - Traducción habilitada")
-    else:
-        print("⚠️  OpenAI API key no configurada - Solo transcripción disponible")
-except Exception as e:
-    print(f"⚠️  Error configurando OpenAI: {e}")
 
 def check_ffmpeg():
     """Verifica si FFmpeg está disponible"""
@@ -99,9 +77,9 @@ def extract_audio_from_video(video_path: str, audio_path: str):
         # Obtener duración del video
         duration = get_video_duration(video_path)
         
-        # Verificar duración (máximo 5 minutos = 300 segundos)
-        if duration > 300:
-            raise HTTPException(status_code=400, detail="El video debe durar menos de 5 minutos")
+        # Verificar duración (máximo 2 minutos = 120 segundos)
+        if duration > 120:
+            raise HTTPException(status_code=400, detail="El video debe durar menos de 2 minutos")
         
         # Extraer audio usando FFmpeg
         cmd = [
@@ -165,95 +143,20 @@ def format_timestamp(seconds):
     secs = seconds % 60
     return f"{hours:02d}:{minutes:02d}:{secs:06.3f}"
 
-def translate_text(text: str, source_lang: str, target_lang: str):
-    """Traduce texto usando OpenAI GPT"""
-    if not translation_enabled or not openai_client:
-        raise HTTPException(status_code=503, detail="Traducción no disponible - API key no configurada")
-    
-    try:
-        # Mapear códigos de idioma
-        lang_names = {
-            "spanish": "español",
-            "english": "inglés"
-        }
-        
-        source_name = lang_names.get(source_lang, source_lang)
-        target_name = lang_names.get(target_lang, target_lang)
-        
-        prompt = f"""Traduce el siguiente texto de {source_name} a {target_name}.
-Mantén el tono natural y el contexto. Solo devuelve la traducción, sin explicaciones adicionales.
-
-Texto a traducir:
-{text}"""
-
-        response = openai_client.chat.completions.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
-            messages=[
-                {"role": "system", "content": "Eres un traductor profesional especializado en subtítulos de video."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=2000,
-            temperature=0.3
-        )
-        
-        return response.choices[0].message.content.strip()
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en traducción: {str(e)}")
-
-def translate_transcription_segments(segments, source_lang: str, target_lang: str):
-    """Traduce todos los segmentos de una transcripción"""
-    if source_lang == target_lang:
-        return segments
-    
-    translated_segments = []
-    
-    for segment in segments:
-        try:
-            original_text = segment['text'].strip()
-            if original_text:
-                translated_text = translate_text(original_text, source_lang, target_lang)
-                
-                # Crear nuevo segmento con traducción
-                translated_segment = {
-                    'start': segment['start'],
-                    'end': segment['end'],
-                    'text': translated_text
-                }
-                translated_segments.append(translated_segment)
-            
-        except Exception as e:
-            # Si falla la traducción de un segmento, usar el original
-            print(f"Error traduciendo segmento: {e}")
-            translated_segments.append(segment)
-    
-    return translated_segments
-
 @app.get("/")
 async def root():
     return {
         "message": "Video Transcription API",
         "status": "running",
-        "translation_enabled": translation_enabled,
-        "version": "2.0.0"
-    }
-
-@app.get("/translation-status")
-async def translation_status():
-    """Verifica si la traducción está disponible"""
-    return {
-        "translation_enabled": translation_enabled,
-        "supported_languages": ["spanish", "english"] if translation_enabled else [],
-        "message": "Traducción disponible" if translation_enabled else "Configurar OPENAI_API_KEY para habilitar traducción"
+        "version": "1.0.0"
     }
 
 @app.post("/transcribe")
 async def transcribe_video(
     file: UploadFile = File(...),
-    language: str = Form(...),
-    output_language: str = Form(None)
+    language: str = Form(...)
 ):
-    """Endpoint principal para transcribir videos con traducción opcional"""
+    """Endpoint principal para transcribir videos"""
     
     # Validar tipo de archivo
     if not file.content_type.startswith('video/'):
@@ -261,24 +164,7 @@ async def transcribe_video(
     
     # Validar idioma de entrada
     if language.lower() not in ['spanish', 'english']:
-        raise HTTPException(status_code=400, detail="Idioma de entrada debe ser 'spanish' o 'english'")
-    
-    # Validar idioma de salida si se proporciona
-    if output_language and output_language.lower() not in ['spanish', 'english']:
-        raise HTTPException(status_code=400, detail="Idioma de salida debe ser 'spanish' o 'english'")
-    
-    # Si no se especifica idioma de salida, usar el mismo de entrada
-    if not output_language:
-        output_language = language
-    
-    # Verificar si se requiere traducción
-    needs_translation = language.lower() != output_language.lower()
-    
-    if needs_translation and not translation_enabled:
-        raise HTTPException(
-            status_code=503,
-            detail="Traducción no disponible - Configure OPENAI_API_KEY para habilitar traducción"
-        )
+        raise HTTPException(status_code=400, detail="Idioma debe ser 'spanish' o 'english'")
     
     # Crear nombres de archivos temporales
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -301,33 +187,15 @@ async def transcribe_video(
         # Transcribir audio
         transcription = transcribe_audio(str(audio_path), language)
         
-        # Aplicar traducción si es necesaria
-        final_segments = transcription['segments']
-        if needs_translation:
-            print(f"Traduciendo de {language} a {output_language}...")
-            final_segments = translate_transcription_segments(
-                transcription['segments'],
-                language.lower(),
-                output_language.lower()
-            )
-        
-        # Crear transcripción final con segmentos (traducidos o no)
-        final_transcription = {
-            'segments': final_segments,
-            'language': transcription.get('language', language)
-        }
-        
         # Crear archivo VTT
-        create_vtt_file(final_transcription, str(vtt_path))
+        create_vtt_file(transcription, str(vtt_path))
         
         # Retornar información de la transcripción
         return {
-            "message": "Transcripción completada exitosamente" + (" con traducción" if needs_translation else ""),
+            "message": "Transcripción completada exitosamente",
             "duration": round(duration, 2),
-            "input_language": language,
-            "output_language": output_language,
-            "translated": needs_translation,
-            "segments_count": len(final_segments),
+            "language": language,
+            "segments_count": len(transcription['segments']),
             "download_url": f"/download/{vtt_filename}"
         }
         

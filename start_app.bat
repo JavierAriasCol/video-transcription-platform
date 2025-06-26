@@ -25,7 +25,7 @@ echo.
 
 set "SCRIPT_DIR=%~dp0"
 
-echo [1/3] Verificando Python...
+echo [1/2] Verificando Python...
 python --version >nul 2>&1
 if errorlevel 1 (
     echo ❌ Error: Python no esta instalado
@@ -41,7 +41,7 @@ echo     - Ubicacion: %SCRIPT_DIR%backend
 echo     - Puerto: 8000
 echo     - URL: http://127.0.0.1:8000
 
-start "Backend - Video Transcription API" cmd /k "cd /d "%SCRIPT_DIR%backend" && (if not exist venv python -m venv venv) && call venv\Scripts\activate.bat && (pip show fastapi >nul 2>&1 || pip install -r requirements.txt) && echo. && echo ✅ Backend iniciado en http://127.0.0.1:8000 && echo. && python main.py"
+start "Backend - Video Transcription API" cmd /k "cd /d "%SCRIPT_DIR%backend" && (if not exist venv python -m venv venv) && call venv\Scripts\activate.bat && (pip show fastapi >nul 2>&1 || pip install -r requirements.txt) && echo. && echo ✅ Backend iniciado en http://127.0.0.1:8000 && echo. && python -m uvicorn main:app --host 127.0.0.1 --port 8000"
 
 echo ⏳ Esperando que el backend se inicie...
 timeout /t 5 /nobreak >nul
@@ -65,13 +65,14 @@ echo 📋 INSTRUCCIONES DE USO:
 echo    1. Selecciona el idioma del video (Español o Inglés)
 echo    2. Arrastra o selecciona tu video (máximo 2 minutos)
 echo    3. Haz clic en "Transcribir Video"
-echo    4. Espera el procesamiento (30-60 segundos)
+echo    4. Espera el procesamiento (1-3 minutos)
 echo    5. Descarga tu archivo VTT
 echo.
 echo ⚠️  NOTAS IMPORTANTES:
 echo    - La primera vez descargará el modelo Whisper Small (~460MB)
-echo    - Mantén ambas ventanas de terminal abiertas
+echo    - Mantén AMBAS ventanas de terminal abiertas
 echo    - Para detener: Cierra las ventanas o presiona Ctrl+C
+echo    - Formatos soportados: MP4, AVI, MOV, MKV
 echo.
 echo ========================================================================
 

@@ -4,7 +4,6 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 // Referencias a elementos del DOM
 const elements = {
     languageSelect: document.getElementById('language'),
-    outputLanguageSelect: document.getElementById('outputLanguage'),
     uploadArea: document.getElementById('uploadArea'),
     videoFile: document.getElementById('videoFile'),
     fileInfo: document.getElementById('fileInfo'),
@@ -19,11 +18,8 @@ const elements = {
     progressFill: document.getElementById('progressFill'),
     progressText: document.getElementById('progressText'),
     resultDuration: document.getElementById('resultDuration'),
-    resultInputLanguage: document.getElementById('resultInputLanguage'),
-    resultOutputLanguage: document.getElementById('resultOutputLanguage'),
+    resultLanguage: document.getElementById('resultLanguage'),
     resultSegments: document.getElementById('resultSegments'),
-    outputLanguageInfo: document.getElementById('outputLanguageInfo'),
-    translationInfo: document.getElementById('translationInfo'),
     downloadBtn: document.getElementById('downloadBtn'),
     newTranscriptionBtn: document.getElementById('newTranscriptionBtn'),
     errorMessage: document.getElementById('errorMessage'),
@@ -43,7 +39,6 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeEventListeners() {
     // Eventos del selector de idioma
     elements.languageSelect.addEventListener('change', updateTranscribeButton);
-    elements.outputLanguageSelect.addEventListener('change', updateTranscribeButton);
 
     // Eventos del área de upload
     elements.uploadArea.addEventListener('click', () => elements.videoFile.click());
@@ -131,9 +126,9 @@ async function handleFileSelection(file) {
         const duration = await getVideoDuration(file);
         elements.fileDuration.textContent = formatDuration(duration);
         
-        // Validar duración (máximo 5 minutos)
-        if (duration > 300) {
-            showError('El video debe durar menos de 5 minutos.');
+        // Validar duración (máximo 2 minutos)
+        if (duration > 120) {
+            showError('El video debe durar menos de 2 minutos.');
             removeSelectedFile();
             return;
         }
@@ -195,14 +190,6 @@ async function startTranscription() {
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('language', elements.languageSelect.value);
-    
-    // Agregar idioma de salida si está seleccionado
-    if (elements.outputLanguageSelect.value) {
-        formData.append('output_language', elements.outputLanguageSelect.value);
-    }
-
-    const needsTranslation = elements.outputLanguageSelect.value &&
-                           elements.outputLanguageSelect.value !== elements.languageSelect.value;
 
     try {
         // Simular progreso
@@ -230,27 +217,15 @@ async function startTranscription() {
 
         const result = await response.json();
 
-        if (needsTranslation) {
-            updateProgress(65, 'Transcribiendo audio...');
-            updateStep(3, 'completed');
-            updateStep(4, 'active');
-            
-            updateProgress(85, 'Traduciendo texto...');
-            updateStep(4, 'completed');
-            updateStep(5, 'active');
-            
-            updateProgress(95, 'Generando archivo VTT...');
-        } else {
-            updateProgress(75, 'Generando archivo VTT...');
-            updateStep(3, 'completed');
-            updateStep(5, 'active');
-        }
+        updateProgress(75, 'Generando archivo VTT...');
+        updateStep(3, 'completed');
+        updateStep(4, 'active');
 
         // Simular tiempo de procesamiento final
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         updateProgress(100, 'Transcripción completada');
-        updateStep(5, 'completed');
+        updateStep(4, 'completed');
 
         // Mostrar resultados
         showResults(result);
@@ -279,18 +254,8 @@ function showResults(result) {
 
     // Mostrar información de resultados
     elements.resultDuration.textContent = `${result.duration} segundos`;
-    elements.resultInputLanguage.textContent = getLanguageDisplay(result.input_language);
+    elements.resultLanguage.textContent = getLanguageDisplay(result.language);
     elements.resultSegments.textContent = `${result.segments_count} segmentos`;
-
-    // Mostrar información de traducción si aplica
-    if (result.translated) {
-        elements.outputLanguageInfo.style.display = 'flex';
-        elements.translationInfo.style.display = 'flex';
-        elements.resultOutputLanguage.textContent = getLanguageDisplay(result.output_language);
-    } else {
-        elements.outputLanguageInfo.style.display = 'none';
-        elements.translationInfo.style.display = 'none';
-    }
 
     // Guardar URL de descarga
     downloadUrl = `${API_BASE_URL}${result.download_url}`;
@@ -323,9 +288,8 @@ function resetApplication() {
     // Limpiar archivo seleccionado
     removeSelectedFile();
     
-    // Resetear selectores de idioma
+    // Resetear selector de idioma
     elements.languageSelect.value = '';
-    elements.outputLanguageSelect.value = '';
     
     // Ocultar todas las secciones
     hideAllSections();
@@ -334,7 +298,7 @@ function resetApplication() {
     downloadUrl = null;
     
     // Resetear pasos de progreso
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 4; i++) {
         updateStep(i, '');
     }
     
@@ -349,17 +313,8 @@ function resetToUpload() {
 // Función para mostrar idiomas con banderas
 function getLanguageDisplay(language) {
     const languageMap = {
-        'auto': '🔍 Detectar automáticamente',
         'spanish': '🇪🇸 Español',
-        'english': '🇺🇸 English',
-        'french': '🇫🇷 Français',
-        'german': '🇩🇪 Deutsch',
-        'italian': '🇮🇹 Italiano',
-        'portuguese': '🇵🇹 Português',
-        'russian': '🇷🇺 Русский',
-        'japanese': '🇯🇵 日本語',
-        'korean': '🇰🇷 한국어',
-        'chinese': '🇨🇳 中文'
+        'english': '🇺🇸 English'
     };
     
     return languageMap[language] || language;

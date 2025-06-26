@@ -1,15 +1,13 @@
 # 🎥 Plataforma de Transcripción de Videos a VTT
 
-Una aplicación web local que convierte videos de menos de 5 minutos a archivos de subtítulos VTT usando OpenAI Whisper, con capacidades de traducción automática.
+Una aplicación web local que convierte videos de menos de 2 minutos a archivos de subtítulos VTT usando OpenAI Whisper.
 
 ## ✨ Características
 
 - 🎯 **Transcripción precisa** con OpenAI Whisper local
-- 🌍 **Soporte multiidioma** - Español, Inglés, Francés, Alemán, Italiano, Portugués, Ruso, Japonés, Coreano, Chino
-- 🔄 **Traducción automática** - Transcribe en un idioma y traduce a otro usando OpenAI GPT
-- 🔍 **Detección automática** de idioma del video
+- 🌍 **Soporte bilingüe** - Español e Inglés
 - 📱 **Interfaz responsive** y fácil de usar
-- 🔒 **Procesamiento híbrido** - Transcripción local con Whisper, traducción via API OpenAI
+- 🔒 **Procesamiento local** - Tus videos nunca salen de tu computadora
 - ⚡ **Rápido y eficiente** para videos cortos
 - 📝 **Formato VTT** con timestamps precisos
 
@@ -19,8 +17,6 @@ Una aplicación web local que convierte videos de menos de 5 minutos a archivos 
 
 - **Python 3.8+** con FastAPI
 - **OpenAI Whisper** para transcripción local
-- **OpenAI GPT API** para traducción de texto
-- **MoviePy** para procesamiento de video
 - **Uvicorn** como servidor ASGI
 
 ### Frontend
@@ -34,9 +30,8 @@ Una aplicación web local que convierte videos de menos de 5 minutos a archivos 
 
 - **Python 3.8 o superior**
 - **FFmpeg** (requerido para procesamiento de video)
-- **OpenAI API Key** (opcional, solo para traducción)
 - Al menos 2GB de RAM libre
-- Conexión a internet (para instalación de Whisper y traducción)
+- Conexión a internet (para instalación de Whisper)
 
 ### Instalación de FFmpeg
 
@@ -72,46 +67,28 @@ winget install ffmpeg
 3. Extrae a `C:\ffmpeg`
 4. Agrega `C:\ffmpeg\bin` al PATH del sistema
 
-### Configuración de OpenAI API (Para Traducción)
+## 🚀 Instalación y Uso
 
-Si deseas usar la funcionalidad de traducción, necesitas una API key de OpenAI:
+### Método Rápido (Recomendado)
 
-1. **Obtener API Key**:
-
-   - Ve a https://platform.openai.com/api-keys
-   - Crea una cuenta o inicia sesión
-   - Genera una nueva API key
-
-2. **Configurar la API Key**:
-
+1. **Descargar el proyecto**
+2. **Ejecutar el instalador automático**:
    ```bash
-   # Copia el archivo de ejemplo
-   cp backend/.env.example backend/.env
-
-   # Edita el archivo .env y agrega tu API key
-   OPENAI_API_KEY=tu_api_key_aquí
+   start_app.bat
    ```
 
-3. **Verificar configuración**:
-   - El archivo `.env` debe estar en la carpeta `backend/`
-   - Nunca compartas tu API key públicamente
-   - La traducción funcionará solo si la API key es válida
+Este script automáticamente:
 
-**Nota**: La funcionalidad de transcripción funciona sin API key. Solo necesitas la API key para traducir los subtítulos a otros idiomas.
+- Verifica que Python esté instalado
+- Crea el entorno virtual
+- Instala las dependencias
+- Inicia el backend en puerto 8000
+- Inicia el frontend en puerto 3000
+- Abre la aplicación en tu navegador
 
-## 🚀 Instalación
+### Método Manual
 
-### 1. Clonar o descargar el proyecto
-
-```bash
-# Si tienes git
-git clone <repository-url>
-cd video-transcription-platform
-
-# O simplemente descarga y extrae los archivos
-```
-
-### 2. Configurar el Backend
+#### 1. Configurar el Backend
 
 ```bash
 # Navegar al directorio del backend
@@ -123,25 +100,12 @@ python -m venv venv
 # Activar entorno virtual
 # En Windows:
 venv\Scripts\activate
-# En macOS/Linux:
-source venv/bin/activate
 
 # Instalar dependencias
 pip install -r requirements.txt
 ```
 
-### 3. Primera ejecución (descarga de modelo Whisper)
-
-```bash
-# Ejecutar el servidor por primera vez
-python main.py
-```
-
-La primera vez que ejecutes la aplicación, Whisper descargará automáticamente el modelo small (~460MB). Esto puede tomar unos minutos dependiendo de tu conexión a internet.
-
-## 🎮 Uso
-
-### 1. Iniciar el Backend
+#### 2. Iniciar el Backend
 
 ```bash
 cd backend
@@ -150,11 +114,7 @@ python main.py
 
 El servidor se iniciará en `http://127.0.0.1:8000`
 
-### 2. Abrir el Frontend
-
-Tienes varias opciones:
-
-**Opción A: Servidor HTTP simple**
+#### 3. Iniciar el Frontend
 
 ```bash
 cd frontend
@@ -163,31 +123,13 @@ python -m http.server 3000
 
 Luego abre `http://localhost:3000`
 
-**Opción B: Live Server (VS Code)**
+### 4. Usar la Aplicación
 
-- Instala la extensión "Live Server" en VS Code
-- Haz clic derecho en `index.html` → "Open with Live Server"
-
-**Opción C: Abrir directamente**
-
-- Simplemente abre `frontend/index.html` en tu navegador
-
-### 3. Usar la Aplicación
-
-1. **Selecciona el idioma de entrada** del video (o usa detección automática)
-2. **Selecciona el idioma de salida** (opcional, para traducción)
-3. **Arrastra o selecciona** tu archivo de video (máximo 5 minutos)
-4. **Haz clic en "Transcribir Video"**
-5. **Espera** mientras se procesa:
-   - Sin traducción: 1-4 minutos
-   - Con traducción: 2-6 minutos (requiere API key de OpenAI)
-6. **Descarga** el archivo VTT generado
-
-#### Ejemplos de Uso:
-
-- **Solo transcripción**: Selecciona idioma de entrada, deja idioma de salida vacío
-- **Transcripción + traducción**: Video en Español → Subtítulos en Inglés
-- **Detección automática**: Usa "Detectar automáticamente" como idioma de entrada
+1. **Selecciona el idioma** del video (Español o Inglés)
+2. **Arrastra o selecciona** tu archivo de video (máximo 2 minutos)
+3. **Haz clic en "Transcribir Video"**
+4. **Espera** mientras se procesa (1-3 minutos)
+5. **Descarga** el archivo VTT generado
 
 ## 📁 Estructura del Proyecto
 
@@ -201,6 +143,8 @@ video-transcription-platform/
 │   ├── index.html          # Interfaz principal
 │   ├── styles.css          # Estilos CSS
 │   └── script.js           # Lógica JavaScript
+├── start_app.bat           # Iniciador automático
+├── install_ffmpeg.bat      # Instalador de FFmpeg
 └── README.md               # Este archivo
 ```
 
@@ -255,9 +199,8 @@ Si cambias el puerto, también actualiza `API_BASE_URL` en `frontend/script.js`.
 - Verifica que el backend esté ejecutándose en http://127.0.0.1:8000
 - Comprueba que no haya otro proceso usando el puerto 8000
 - Revisa la consola del navegador para más detalles
-- Asegúrate de que ambos servicios (frontend y backend) estén corriendo
 
-### Error: "The system cannot find the file specified" / "FFmpeg not found"
+### Error: "FFmpeg not found"
 
 Este es el error más común. FFmpeg no está instalado o no está en el PATH:
 
@@ -268,27 +211,11 @@ Este es el error más común. FFmpeg no está instalado o no está en el PATH:
 3. Reinicia la terminal después de la instalación
 4. Verifica con: `ffmpeg -version`
 
-**Si el problema persiste:**
+### Error: "El video debe durar menos de 2 minutos"
 
-- Reinicia tu computadora después de instalar FFmpeg
-- Verifica que FFmpeg esté en el PATH del sistema
-- Prueba ejecutar `ffmpeg -version` en una nueva terminal
-
-### Error: "El video debe durar menos de 5 minutos"
-
-- La aplicación tiene un límite de 5 minutos por diseño
+- La aplicación tiene un límite de 2 minutos por diseño
 - Usa un editor de video para recortar el archivo
 - Verifica que el archivo no esté corrupto
-
-### Error: "Error en transcripción" / Baja calidad de transcripción
-
-- Asegúrate de que el audio sea claro y sin ruido de fondo
-- Verifica que hayas seleccionado el idioma correcto
-- Prueba con un modelo Whisper más grande:
-  ```python
-  # En main.py, línea 25, cambia:
-  model = whisper.load_model("small")  # o "medium", "large"
-  ```
 
 ### Error: "Python no está instalado"
 
@@ -302,60 +229,13 @@ Este es el error más común. FFmpeg no está instalado o no está en el PATH:
 - Reinstala dependencias: `pip install -r requirements.txt`
 - Si persiste: `pip install openai-whisper --upgrade`
 
-### La aplicación es muy lenta
-
-- Usa un modelo Whisper más pequeño (`tiny` o `base`)
-- Cierra otras aplicaciones que consuman mucha RAM
-- Asegúrate de tener al menos 2GB de RAM libre
-
-### Error de CORS / Cross-Origin
-
-- Asegúrate de acceder al frontend desde http://localhost:3000
-- No abras el archivo HTML directamente (file://)
-- Verifica que el backend esté corriendo en el puerto 8000
-
-### Problemas con Traducción
-
-**Error: "Translation failed" / "API key not configured"**
-
-- Verifica que tengas un archivo `.env` en la carpeta `backend/`
-- Asegúrate de que tu API key de OpenAI sea válida
-- Comprueba que tengas créditos disponibles en tu cuenta de OpenAI
-- El archivo `.env` debe contener: `OPENAI_API_KEY=tu_api_key_aquí`
-
-**La traducción es muy lenta**
-
-- La traducción depende de la API de OpenAI, puede tomar tiempo adicional
-- Videos más largos requieren más tiempo de traducción
-- Verifica tu conexión a internet
-
-**Error: "Rate limit exceeded"**
-
-- Has excedido el límite de uso de la API de OpenAI
-- Espera unos minutos antes de intentar de nuevo
-- Considera actualizar tu plan de OpenAI si usas frecuentemente la traducción
-
 ## 📊 Rendimiento
 
 ### Tiempos Aproximados (modelo small)
 
-**Solo Transcripción:**
-
 - **Video de 30 segundos**: ~20-40 segundos de procesamiento
 - **Video de 1 minuto**: ~40-80 segundos de procesamiento
 - **Video de 2 minutos**: ~80-160 segundos de procesamiento
-- **Video de 3 minutos**: ~120-240 segundos de procesamiento
-- **Video de 5 minutos**: ~200-400 segundos de procesamiento
-
-**Transcripción + Traducción:**
-
-- **Video de 30 segundos**: ~30-60 segundos de procesamiento
-- **Video de 1 minuto**: ~60-120 segundos de procesamiento
-- **Video de 2 minutos**: ~120-240 segundos de procesamiento
-- **Video de 3 minutos**: ~180-360 segundos de procesamiento
-- **Video de 5 minutos**: ~300-600 segundos de procesamiento
-
-_Nota: Los tiempos de traducción dependen de la velocidad de respuesta de la API de OpenAI_
 
 ### Uso de Recursos
 
@@ -371,15 +251,10 @@ Verificar estado del servidor
 
 ### POST `/transcribe`
 
-Transcribir video (y opcionalmente traducir)
+Transcribir video
 
 - **file**: Archivo de video (multipart/form-data)
-- **language**: Idioma de entrada ("auto", "spanish", "english", "french", "german", "italian", "portuguese", "russian", "japanese", "korean", "chinese")
-- **output_language**: (Opcional) Idioma de salida para traducción
-
-### GET `/translation-status`
-
-Verificar estado de la traducción (endpoint de utilidad)
+- **language**: Idioma ("spanish" o "english")
 
 ### GET `/download/{filename}`
 
