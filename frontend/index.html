@@ -13,7 +13,15 @@
         <p>Convierte tus videos a subtítulos VTT usando Whisper AI</p>
       </header>
 
+      <!-- Navigation tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-tab active" id="transcriptionTab">📝 Transcripción</button>
+        <button class="nav-tab" id="subtitlingTab">🎬 Subtitulado</button>
+      </nav>
+
       <main>
+        <!-- Transcription Section -->
+        <div class="tab-content active" id="transcriptionContent">
         <div class="upload-section">
           <div class="upload-card card">
             <div class="card-header">
@@ -136,6 +144,169 @@
             <button class="retry-btn" id="retryBtn">
               🔄 Intentar de Nuevo
             </button>
+          </div>
+        </div>
+        </div>
+
+        <!-- Subtitling Section -->
+        <div class="tab-content" id="subtitlingContent">
+          <div class="subtitling-section">
+            <div class="subtitling-card card">
+              <div class="card-header">
+                <h2 class="card-title">Subtitular Video</h2>
+                <p>Añade subtítulos a tu video usando un archivo VTT</p>
+              </div>
+
+              <!-- Video upload -->
+              <div class="form-group">
+                <label for="subtitleVideoFile" class="form-label">Video:</label>
+                <div class="upload-area" id="subtitleVideoUploadArea">
+                  <div class="upload-content">
+                    <div class="upload-icon">🎥</div>
+                    <p>Selecciona tu video</p>
+                    <p class="upload-hint">Formatos: MP4, AVI, MOV, MKV</p>
+                  </div>
+                  <input type="file" id="subtitleVideoFile" accept="video/*" hidden />
+                </div>
+                <div class="file-info" id="subtitleVideoInfo" style="display: none">
+                  <div class="file-details">
+                    <span class="file-name" id="subtitleVideoName"></span>
+                    <span class="file-size" id="subtitleVideoSize"></span>
+                  </div>
+                  <button class="remove-file" id="removeSubtitleVideo">✕</button>
+                </div>
+              </div>
+
+              <!-- VTT upload -->
+              <div class="form-group">
+                <label for="vttFile" class="form-label">Archivo VTT:</label>
+                <div class="upload-area" id="vttUploadArea">
+                  <div class="upload-content">
+                    <div class="upload-icon">📄</div>
+                    <p>Selecciona tu archivo VTT</p>
+                    <p class="upload-hint">Archivo con timestamps de subtítulos</p>
+                  </div>
+                  <input type="file" id="vttFile" accept=".vtt" hidden />
+                </div>
+                <div class="file-info" id="vttFileInfo" style="display: none">
+                  <div class="file-details">
+                    <span class="file-name" id="vttFileName"></span>
+                    <span class="file-size" id="vttFileSize"></span>
+                  </div>
+                  <button class="remove-file" id="removeVttFile">✕</button>
+                </div>
+              </div>
+
+              <!-- Subtitle customization -->
+              <div class="subtitle-options">
+                <h3 class="options-title">Opciones de Subtítulos</h3>
+                <div class="options-grid">
+                  <div class="form-group">
+                    <label for="fontColor" class="form-label">Color de letra:</label>
+                    <input type="color" id="fontColor" class="color-input" value="#ffffff">
+                  </div>
+                  <div class="form-group">
+                    <label for="backgroundColor" class="form-label">Color de fondo:</label>
+                    <input type="color" id="backgroundColor" class="color-input" value="#000000">
+                  </div>
+                  <div class="form-group">
+                    <label for="fontSize" class="form-label">Tamaño de letra:</label>
+                    <select id="fontSize" class="form-select">
+                      <option value="16">Pequeño (16px)</option>
+                      <option value="20" selected>Mediano (20px)</option>
+                      <option value="24">Grande (24px)</option>
+                      <option value="28">Extra Grande (28px)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="backgroundOpacity" class="form-label">Opacidad del fondo:</label>
+                    <input type="range" id="backgroundOpacity" class="range-input" min="0" max="1" step="0.1" value="0.8">
+                    <span class="range-value" id="opacityValue">0.8</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Generate button -->
+              <button class="transcribe-btn" id="generateSubtitlesBtn" disabled>
+                <span class="btn-text">Generar Video Subtitulado</span>
+                <span class="btn-loader" style="display: none">⏳</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Subtitling Progress -->
+          <div class="progress-section" id="subtitlingProgressSection" style="display: none">
+            <div class="progress-card card">
+              <div class="card-header">
+                <h3 class="card-title">Procesando Video...</h3>
+              </div>
+              <div class="progress-steps">
+                <div class="step" id="subStep1">
+                  <div class="step-icon">📤</div>
+                  <span>Subiendo archivos</span>
+                </div>
+                <div class="step" id="subStep2">
+                  <div class="step-icon">🎬</div>
+                  <span>Procesando video</span>
+                </div>
+                <div class="step" id="subStep3">
+                  <div class="step-icon">📝</div>
+                  <span>Añadiendo subtítulos</span>
+                </div>
+                <div class="step" id="subStep4">
+                  <div class="step-icon">💾</div>
+                  <span>Generando resultado</span>
+                </div>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="subtitlingProgressFill"></div>
+              </div>
+              <p class="progress-text" id="subtitlingProgressText">Iniciando...</p>
+            </div>
+          </div>
+
+          <!-- Subtitling Results -->
+          <div class="results-section" id="subtitlingResultsSection" style="display: none">
+            <div class="results-card card">
+              <div class="card-header">
+                <h3 class="card-title">✅ Video Subtitulado Completado</h3>
+              </div>
+              <div class="results-info">
+                <div class="info-item">
+                  <span class="info-label">Duración:</span>
+                  <span class="info-value" id="subtitlingResultDuration"></span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Subtítulos:</span>
+                  <span class="info-value" id="subtitlingResultSubtitles"></span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Tamaño:</span>
+                  <span class="info-value" id="subtitlingResultSize"></span>
+                </div>
+              </div>
+              <div class="results-actions">
+                <button class="download-btn" id="downloadSubtitledVideoBtn">
+                  📥 Descargar Video
+                </button>
+                <button class="new-transcription-btn" id="newSubtitlingBtn">
+                  🔄 Nuevo Subtitulado
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtitling Error -->
+          <div class="error-section" id="subtitlingErrorSection" style="display: none">
+            <div class="error-card card">
+              <div class="card-header">
+                <h3 class="card-title">❌ Error en el Subtitulado</h3>
+              </div>
+              <p class="error-message" id="subtitlingErrorMessage"></p>
+              <button class="retry-btn" id="retrySubtitlingBtn">
+                🔄 Intentar de Nuevo
+              </button>
+            </div>
           </div>
         </div>
       </main>
