@@ -304,7 +304,7 @@ async function startTranscription() {
     console.log('DEBUG - elements.cleanTranscription:', elements.cleanTranscription);
     console.log('DEBUG - elements.cleanTranscription.checked:', elements.cleanTranscription ? elements.cleanTranscription.checked : 'N/A');
     
-    const isCleanChecked = elements.cleanTranscription ? elements.cleanTranscription.checked : false;
+    const isCleanChecked = document.getElementById('cleanTranscription').checked;
     const transcriptionType = isCleanChecked ? 'clean' : 'vtt';
     console.log('DEBUG - Estado del checkbox cleanTranscription:', isCleanChecked);
     console.log('DEBUG - Tipo de transcripción enviado:', transcriptionType);
