@@ -281,7 +281,8 @@ async def cleanup_temp_files():
 
 def create_subtitled_video(video_path: str, vtt_path: str, output_path: str,
                           font_color: str = "#ffffff", background_color: str = "#000000",
-                          font_size: int = 20, background_opacity: float = 0.8):
+                          font_size: int = 20, background_opacity: float = 0.8,
+                          box_enabled: bool = False, box_color: str = "#000000"):
     """Crea un video con subtítulos usando FFmpeg"""
     try:
         # Verificar si FFmpeg está disponible
@@ -323,14 +324,55 @@ def create_subtitled_video(video_path: str, vtt_path: str, output_path: str,
         vtt_path_for_filter = vtt_path_absolute.replace('\\', '\\\\').replace(':', '\\:')
         
         # Crear filtro de subtítulos con sintaxis correcta usando filename=
-        subtitle_filter = (
-            f"subtitles=filename='{vtt_path_for_filter}':force_style='"
-            f"FontSize={font_size},"
-            f"PrimaryColour=&H{font_rgb[2]:02x}{font_rgb[1]:02x}{font_rgb[0]:02x},"
-            f"BackColour=&H{bg_rgb[2]:02x}{bg_rgb[1]:02x}{bg_rgb[0]:02x},"
-            f"Outline=1,Shadow=1,"
-            f"MarginV=20'"
-        )
+        if box_enabled:
+            # Configuración para caja - BorderStyle=4 crea una caja opaca de fondo
+            box_rgb = hex_to_rgb(box_color)
+            
+            # Detectar si el color es muy oscuro y ajustar opacidad automáticamente
+            # Calcular luminancia del color para determinar si es oscuro
+            luminance = (0.299 * box_rgb[0] + 0.587 * box_rgb[1] + 0.114 * box_rgb[2])
+            
+            # Si el color es muy oscuro (luminance < 50), usar menos opacidad para mejor visibilidad
+            # Si es claro, usar más opacidad
+            if luminance < 50:
+                alpha = "A0"  # 62% opaco para colores oscuros
+                print(f"DEBUG - Color oscuro detectado (luminance: {luminance:.1f}), usando opacidad 62%")
+            else:
+                alpha = "D0"  # 81% opaco para colores claros
+                print(f"DEBUG - Color claro detectado (luminance: {luminance:.1f}), usando opacidad 81%")
+            
+            # Para cajas, usamos BorderStyle=4 y configuramos BackColour con opacidad
+            # El formato de color en ASS es &HAABBGGRR donde AA es alpha (transparencia)
+            subtitle_filter = (
+                f"subtitles=filename='{vtt_path_for_filter}':force_style='"
+                f"FontSize={font_size},"
+                f"PrimaryColour=&H00{font_rgb[2]:02x}{font_rgb[1]:02x}{font_rgb[0]:02x},"
+                f"BorderStyle=4,"
+                f"BackColour=&H{alpha}{box_rgb[2]:02x}{box_rgb[1]:02x}{box_rgb[0]:02x},"
+                f"Outline=1,"
+                f"OutlineColour=&H00000000,"
+                f"Shadow=0,"
+                f"MarginV=20,"
+                f"MarginL=15,"
+                f"MarginR=15'"
+            )
+            print(f"DEBUG - Modo caja habilitado:")
+            print(f"DEBUG - Color de caja RGB: {box_rgb}")
+            print(f"DEBUG - BackColour con opacidad automática: &H{alpha}{box_rgb[2]:02x}{box_rgb[1]:02x}{box_rgb[0]:02x}")
+            print(f"DEBUG - Configuración: BorderStyle=4, Outline=1 para mejor visibilidad")
+        else:
+            # Configuración normal sin caja (BorderStyle=1 con outline)
+            subtitle_filter = (
+                f"subtitles=filename='{vtt_path_for_filter}':force_style='"
+                f"FontSize={font_size},"
+                f"PrimaryColour=&H00{font_rgb[2]:02x}{font_rgb[1]:02x}{font_rgb[0]:02x},"
+                f"BorderStyle=1,"
+                f"OutlineColour=&H00{bg_rgb[2]:02x}{bg_rgb[1]:02x}{bg_rgb[0]:02x},"
+                f"Outline=2,"
+                f"Shadow=1,"
+                f"MarginV=20'"
+            )
+            print(f"DEBUG - Modo normal (sin caja)")
         
         print(f"DEBUG - Filtro de subtítulos: {subtitle_filter}")
         
@@ -380,7 +422,9 @@ async def subtitle_video(
     font_color: str = Form("#ffffff"),
     background_color: str = Form("#000000"),
     font_size: int = Form(20),
-    background_opacity: float = Form(0.8)
+    background_opacity: float = Form(0.8),
+    box_enabled: bool = Form(False),
+    box_color: str = Form("#000000")
 ):
     """Endpoint para añadir subtítulos a un video"""
     
@@ -427,7 +471,8 @@ async def subtitle_video(
         # Crear video subtitulado
         create_subtitled_video(
             video_path, vtt_path, output_path,
-            font_color, background_color, font_size, background_opacity
+            font_color, background_color, font_size, background_opacity,
+            box_enabled, box_color
         )
         
         # Obtener tamaño del archivo resultante

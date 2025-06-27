@@ -741,6 +741,25 @@ footer {
     min-width: 2rem;
 }
 
+/* Checkbox input */
+.checkbox-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.5rem;
+    accent-color: hsl(var(--primary));
+    cursor: pointer;
+}
+
+.form-label:has(.checkbox-input) {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    margin-bottom: 0.5rem;
+}
+
 /* Responsive adjustments for new elements */
 @media (max-width: 768px) {
     .nav-tabs {

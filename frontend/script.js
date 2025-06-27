@@ -50,6 +50,8 @@ const elements = {
     fontSize: document.getElementById('fontSize'),
     backgroundOpacity: document.getElementById('backgroundOpacity'),
     opacityValue: document.getElementById('opacityValue'),
+    boxEnabled: document.getElementById('boxEnabled'),
+    boxColor: document.getElementById('boxColor'),
     generateSubtitlesBtn: document.getElementById('generateSubtitlesBtn'),
     subtitlingProgressSection: document.getElementById('subtitlingProgressSection'),
     subtitlingResultsSection: document.getElementById('subtitlingResultsSection'),
@@ -557,6 +559,8 @@ async function startSubtitling() {
     formData.append('background_color', elements.backgroundColor.value);
     formData.append('font_size', elements.fontSize.value);
     formData.append('background_opacity', elements.backgroundOpacity.value);
+    formData.append('box_enabled', elements.boxEnabled.checked);
+    formData.append('box_color', elements.boxColor.value);
 
     try {
         // Update progress
@@ -662,6 +666,8 @@ function resetSubtitling() {
     elements.backgroundColor.value = '#000000';
     elements.fontSize.value = '20';
     elements.backgroundOpacity.value = '0.8';
+    elements.boxEnabled.checked = false;
+    elements.boxColor.value = '#000000';
     updateOpacityValue();
     
     // Hide all sections
