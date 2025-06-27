@@ -1,71 +1,8 @@
 // Configuración de la API
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
-// Referencias a elementos del DOM
-const elements = {
-    // Navigation tabs
-    transcriptionTab: document.getElementById('transcriptionTab'),
-    subtitlingTab: document.getElementById('subtitlingTab'),
-    transcriptionContent: document.getElementById('transcriptionContent'),
-    subtitlingContent: document.getElementById('subtitlingContent'),
-    
-    // Transcription elements
-    languageSelect: document.getElementById('language'),
-    uploadArea: document.getElementById('uploadArea'),
-    videoFile: document.getElementById('videoFile'),
-    fileInfo: document.getElementById('fileInfo'),
-    fileName: document.getElementById('fileName'),
-    fileSize: document.getElementById('fileSize'),
-    fileDuration: document.getElementById('fileDuration'),
-    removeFile: document.getElementById('removeFile'),
-    transcribeBtn: document.getElementById('transcribeBtn'),
-    progressSection: document.getElementById('progressSection'),
-    resultsSection: document.getElementById('resultsSection'),
-    errorSection: document.getElementById('errorSection'),
-    progressFill: document.getElementById('progressFill'),
-    progressText: document.getElementById('progressText'),
-    resultDuration: document.getElementById('resultDuration'),
-    resultLanguage: document.getElementById('resultLanguage'),
-    resultSegments: document.getElementById('resultSegments'),
-    downloadBtn: document.getElementById('downloadBtn'),
-    newTranscriptionBtn: document.getElementById('newTranscriptionBtn'),
-    errorMessage: document.getElementById('errorMessage'),
-    retryBtn: document.getElementById('retryBtn'),
-    
-    // Subtitling elements
-    subtitleVideoUploadArea: document.getElementById('subtitleVideoUploadArea'),
-    subtitleVideoFile: document.getElementById('subtitleVideoFile'),
-    subtitleVideoInfo: document.getElementById('subtitleVideoInfo'),
-    subtitleVideoName: document.getElementById('subtitleVideoName'),
-    subtitleVideoSize: document.getElementById('subtitleVideoSize'),
-    removeSubtitleVideo: document.getElementById('removeSubtitleVideo'),
-    vttUploadArea: document.getElementById('vttUploadArea'),
-    vttFile: document.getElementById('vttFile'),
-    vttFileInfo: document.getElementById('vttFileInfo'),
-    vttFileName: document.getElementById('vttFileName'),
-    vttFileSize: document.getElementById('vttFileSize'),
-    removeVttFile: document.getElementById('removeVttFile'),
-    fontColor: document.getElementById('fontColor'),
-    backgroundColor: document.getElementById('backgroundColor'),
-    fontSize: document.getElementById('fontSize'),
-    backgroundOpacity: document.getElementById('backgroundOpacity'),
-    opacityValue: document.getElementById('opacityValue'),
-    boxEnabled: document.getElementById('boxEnabled'),
-    boxColor: document.getElementById('boxColor'),
-    generateSubtitlesBtn: document.getElementById('generateSubtitlesBtn'),
-    subtitlingProgressSection: document.getElementById('subtitlingProgressSection'),
-    subtitlingResultsSection: document.getElementById('subtitlingResultsSection'),
-    subtitlingErrorSection: document.getElementById('subtitlingErrorSection'),
-    subtitlingProgressFill: document.getElementById('subtitlingProgressFill'),
-    subtitlingProgressText: document.getElementById('subtitlingProgressText'),
-    subtitlingResultDuration: document.getElementById('subtitlingResultDuration'),
-    subtitlingResultSubtitles: document.getElementById('subtitlingResultSubtitles'),
-    subtitlingResultSize: document.getElementById('subtitlingResultSize'),
-    downloadSubtitledVideoBtn: document.getElementById('downloadSubtitledVideoBtn'),
-    newSubtitlingBtn: document.getElementById('newSubtitlingBtn'),
-    subtitlingErrorMessage: document.getElementById('subtitlingErrorMessage'),
-    retrySubtitlingBtn: document.getElementById('retrySubtitlingBtn')
-};
+// Referencias a elementos del DOM (se inicializarán cuando el DOM esté listo)
+let elements = {};
 
 // Variables globales
 let selectedFile = null;
@@ -76,6 +13,87 @@ let subtitledVideoDownloadUrl = null;
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar referencias a elementos del DOM
+    elements = {
+        // Navigation tabs
+        transcriptionTab: document.getElementById('transcriptionTab'),
+        subtitlingTab: document.getElementById('subtitlingTab'),
+        transcriptionContent: document.getElementById('transcriptionContent'),
+        subtitlingContent: document.getElementById('subtitlingContent'),
+        
+        // Transcription elements
+        languageSelect: document.getElementById('language'),
+        cleanTranscription: document.getElementById('cleanTranscription'),
+        uploadArea: document.getElementById('uploadArea'),
+        videoFile: document.getElementById('videoFile'),
+        fileInfo: document.getElementById('fileInfo'),
+        fileName: document.getElementById('fileName'),
+        fileSize: document.getElementById('fileSize'),
+        fileDuration: document.getElementById('fileDuration'),
+        removeFile: document.getElementById('removeFile'),
+        transcribeBtn: document.getElementById('transcribeBtn'),
+        progressSection: document.getElementById('progressSection'),
+        resultsSection: document.getElementById('resultsSection'),
+        errorSection: document.getElementById('errorSection'),
+        progressFill: document.getElementById('progressFill'),
+        progressText: document.getElementById('progressText'),
+        resultDuration: document.getElementById('resultDuration'),
+        resultLanguage: document.getElementById('resultLanguage'),
+        resultSegments: document.getElementById('resultSegments'),
+        downloadBtn: document.getElementById('downloadBtn'),
+        newTranscriptionBtn: document.getElementById('newTranscriptionBtn'),
+        errorMessage: document.getElementById('errorMessage'),
+        retryBtn: document.getElementById('retryBtn'),
+        
+        // Subtitling elements
+        subtitleVideoUploadArea: document.getElementById('subtitleVideoUploadArea'),
+        subtitleVideoFile: document.getElementById('subtitleVideoFile'),
+        subtitleVideoInfo: document.getElementById('subtitleVideoInfo'),
+        subtitleVideoName: document.getElementById('subtitleVideoName'),
+        subtitleVideoSize: document.getElementById('subtitleVideoSize'),
+        removeSubtitleVideo: document.getElementById('removeSubtitleVideo'),
+        vttUploadArea: document.getElementById('vttUploadArea'),
+        vttFile: document.getElementById('vttFile'),
+        vttFileInfo: document.getElementById('vttFileInfo'),
+        vttFileName: document.getElementById('vttFileName'),
+        vttFileSize: document.getElementById('vttFileSize'),
+        removeVttFile: document.getElementById('removeVttFile'),
+        fontColor: document.getElementById('fontColor'),
+        backgroundColor: document.getElementById('backgroundColor'),
+        fontSize: document.getElementById('fontSize'),
+        backgroundOpacity: document.getElementById('backgroundOpacity'),
+        opacityValue: document.getElementById('opacityValue'),
+        boxEnabled: document.getElementById('boxEnabled'),
+        boxColor: document.getElementById('boxColor'),
+        generateSubtitlesBtn: document.getElementById('generateSubtitlesBtn'),
+        subtitlingProgressSection: document.getElementById('subtitlingProgressSection'),
+        subtitlingResultsSection: document.getElementById('subtitlingResultsSection'),
+        subtitlingErrorSection: document.getElementById('subtitlingErrorSection'),
+        subtitlingProgressFill: document.getElementById('subtitlingProgressFill'),
+        subtitlingProgressText: document.getElementById('subtitlingProgressText'),
+        subtitlingResultDuration: document.getElementById('subtitlingResultDuration'),
+        subtitlingResultSubtitles: document.getElementById('subtitlingResultSubtitles'),
+        subtitlingResultSize: document.getElementById('subtitlingResultSize'),
+        downloadSubtitledVideoBtn: document.getElementById('downloadSubtitledVideoBtn'),
+        newSubtitlingBtn: document.getElementById('newSubtitlingBtn'),
+        subtitlingErrorMessage: document.getElementById('subtitlingErrorMessage'),
+        retrySubtitlingBtn: document.getElementById('retrySubtitlingBtn')
+    };
+    
+    // Debug logging para verificar que el elemento cleanTranscription se inicializa correctamente
+    console.log('DEBUG - Elemento cleanTranscription inicializado:', elements.cleanTranscription);
+    console.log('DEBUG - cleanTranscription existe:', elements.cleanTranscription !== null);
+    
+    // Test adicional para verificar el checkbox
+    if (elements.cleanTranscription) {
+        console.log('DEBUG - Estado inicial del checkbox:', elements.cleanTranscription.checked);
+        
+        // Agregar listener para cambios en el checkbox
+        elements.cleanTranscription.addEventListener('change', function() {
+            console.log('DEBUG - Checkbox cambió a:', this.checked);
+        });
+    }
+    
     initializeEventListeners();
     checkAPIConnection();
 });
@@ -94,7 +112,7 @@ function initializeEventListeners() {
     elements.videoFile.addEventListener('change', handleFileSelect);
     elements.removeFile.addEventListener('click', removeSelectedFile);
     elements.transcribeBtn.addEventListener('click', startTranscription);
-    elements.downloadBtn.addEventListener('click', downloadVTTFile);
+    elements.downloadBtn.addEventListener('click', downloadTranscriptionFile);
     elements.newTranscriptionBtn.addEventListener('click', resetApplication);
     elements.retryBtn.addEventListener('click', resetToUpload);
 
@@ -162,8 +180,8 @@ function handleFileSelect(e) {
 
 async function handleFileSelection(file) {
     // Validar tipo de archivo
-    if (!file.type.startsWith('video/')) {
-        showError('Por favor selecciona un archivo de video válido.');
+    if (!file.type.startsWith('video/') && !file.type.startsWith('audio/')) {
+        showError('Por favor selecciona un archivo de video o audio válido.');
         return;
     }
 
@@ -180,16 +198,26 @@ async function handleFileSelection(file) {
     elements.fileName.textContent = file.name;
     elements.fileSize.textContent = formatFileSize(file.size);
     
-    // Obtener duración del video
+    // Obtener duración del archivo
     try {
-        const duration = await getVideoDuration(file);
-        elements.fileDuration.textContent = formatDuration(duration);
+        let duration;
+        if (file.type.startsWith('video/')) {
+            duration = await getVideoDuration(file);
+        } else if (file.type.startsWith('audio/')) {
+            duration = await getAudioDuration(file);
+        }
         
-        // Validar duración (máximo 2 minutos)
-        if (duration > 120) {
-            showError('El video debe durar menos de 2 minutos.');
-            removeSelectedFile();
-            return;
+        if (duration) {
+            elements.fileDuration.textContent = formatDuration(duration);
+            
+            // Validar duración (máximo 30 minutos)
+            if (duration > 1800) {
+                showError('El archivo debe durar menos de 30 minutos.');
+                removeSelectedFile();
+                return;
+            }
+        } else {
+            elements.fileDuration.textContent = 'Duración no disponible';
         }
     } catch (error) {
         elements.fileDuration.textContent = 'Duración no disponible';
@@ -220,6 +248,24 @@ function getVideoDuration(file) {
     });
 }
 
+function getAudioDuration(file) {
+    return new Promise((resolve, reject) => {
+        const audio = document.createElement('audio');
+        audio.preload = 'metadata';
+        
+        audio.onloadedmetadata = function() {
+            window.URL.revokeObjectURL(audio.src);
+            resolve(audio.duration);
+        };
+        
+        audio.onerror = function() {
+            reject(new Error('No se pudo obtener la duración del audio'));
+        };
+        
+        audio.src = URL.createObjectURL(file);
+    });
+}
+
 function removeSelectedFile() {
     selectedFile = null;
     elements.videoFile.value = '';
@@ -237,7 +283,7 @@ function updateTranscribeButton() {
 
 async function startTranscription() {
     if (!selectedFile || !elements.languageSelect.value) {
-        showError('Por favor selecciona un archivo y un idioma.');
+        showError('Por favor selecciona un archivo de video o audio y un idioma.');
         return;
     }
 
@@ -249,6 +295,27 @@ async function startTranscription() {
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('language', elements.languageSelect.value);
+    
+    // Debug logging más detallado para verificar el estado del checkbox
+    const checkboxElement = document.getElementById('cleanTranscription');
+    console.log('DEBUG - Elemento checkbox encontrado:', checkboxElement);
+    console.log('DEBUG - Checkbox existe:', checkboxElement !== null);
+    console.log('DEBUG - Checkbox checked property:', checkboxElement ? checkboxElement.checked : 'N/A');
+    console.log('DEBUG - elements.cleanTranscription:', elements.cleanTranscription);
+    console.log('DEBUG - elements.cleanTranscription.checked:', elements.cleanTranscription ? elements.cleanTranscription.checked : 'N/A');
+    
+    const isCleanChecked = elements.cleanTranscription ? elements.cleanTranscription.checked : false;
+    const transcriptionType = isCleanChecked ? 'clean' : 'vtt';
+    console.log('DEBUG - Estado del checkbox cleanTranscription:', isCleanChecked);
+    console.log('DEBUG - Tipo de transcripción enviado:', transcriptionType);
+    
+    formData.append('transcription_type', transcriptionType);
+    
+    // Verificar FormData antes de enviar
+    console.log('DEBUG - Verificando FormData antes de enviar...');
+    for (let [key, value] of formData.entries()) {
+        console.log(`DEBUG - FormData ${key}:`, value);
+    }
 
     try {
         // Simular progreso
@@ -276,7 +343,8 @@ async function startTranscription() {
 
         const result = await response.json();
 
-        updateProgress(75, 'Generando archivo VTT...');
+        const progressText = elements.cleanTranscription.checked ? 'Generando transcripción...' : 'Generando archivo VTT...';
+        updateProgress(75, progressText);
         updateStep(3, 'completed');
         updateStep(4, 'active');
 
@@ -311,10 +379,20 @@ function showResults(result) {
     hideAllSections();
     elements.resultsSection.style.display = 'block';
 
+    // Debug logging para verificar el resultado
+    console.log('DEBUG - Resultado recibido del backend:', result);
+    console.log('DEBUG - Tipo de transcripción en resultado:', result.transcription_type);
+    console.log('DEBUG - URL de descarga:', result.download_url);
+
     // Mostrar información de resultados
     elements.resultDuration.textContent = `${result.duration} segundos`;
     elements.resultLanguage.textContent = getLanguageDisplay(result.language);
-    elements.resultSegments.textContent = `${result.segments_count} segmentos`;
+    elements.resultSegments.textContent = `${result.original_segments_count} segmentos`;
+
+    // Actualizar texto del botón de descarga según el tipo del resultado (no del checkbox)
+    const isClean = result.transcription_type === 'clean';
+    console.log('DEBUG - Es transcripción limpia según resultado:', isClean);
+    elements.downloadBtn.innerHTML = isClean ? '📥 Descargar TXT' : '📥 Descargar VTT';
 
     // Guardar URL de descarga
     downloadUrl = `${API_BASE_URL}${result.download_url}`;
@@ -332,11 +410,24 @@ function hideAllSections() {
     elements.errorSection.style.display = 'none';
 }
 
-function downloadVTTFile() {
+function downloadTranscriptionFile() {
     if (downloadUrl) {
         const link = document.createElement('a');
         link.href = downloadUrl;
-        link.download = `transcription_${Date.now()}.vtt`;
+        
+        // Determinar extensión basándose en la URL de descarga
+        let extension = '.vtt'; // default
+        if (downloadUrl.includes('.txt')) {
+            extension = '.txt';
+        } else if (downloadUrl.includes('.vtt')) {
+            extension = '.vtt';
+        }
+        
+        console.log('DEBUG - URL de descarga:', downloadUrl);
+        console.log('DEBUG - Extensión detectada:', extension);
+        
+        link.download = `transcription_${Date.now()}${extension}`;
+        
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

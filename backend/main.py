@@ -38,21 +38,21 @@ def check_ffmpeg():
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False
 
-def get_video_duration(video_path: str):
-    """Obtiene la duración del video usando FFprobe"""
+def get_media_duration(media_path: str):
+    """Obtiene la duración del archivo de video o audio usando FFprobe"""
     try:
         cmd = [
             'ffprobe', '-v', 'quiet', '-print_format', 'json',
-            '-show_format', '-show_streams', video_path
+            '-show_format', '-show_streams', media_path
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         
         import json
         data = json.loads(result.stdout)
         
-        # Buscar duración en streams de video
+        # Buscar duración en streams de video o audio
         for stream in data.get('streams', []):
-            if stream.get('codec_type') == 'video':
+            if stream.get('codec_type') in ['video', 'audio']:
                 duration = float(stream.get('duration', 0))
                 if duration > 0:
                     return duration
@@ -64,8 +64,8 @@ def get_video_duration(video_path: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error obteniendo duración: {str(e)}")
 
-def extract_audio_from_video(video_path: str, audio_path: str):
-    """Extrae audio de un archivo de video usando FFmpeg"""
+def extract_audio_or_process_audio(input_path: str, audio_path: str):
+    """Extrae audio de un archivo de video o procesa archivo de audio usando FFmpeg"""
     try:
         # Verificar si FFmpeg está disponible
         if not check_ffmpeg():
@@ -74,25 +74,45 @@ def extract_audio_from_video(video_path: str, audio_path: str):
                 detail="FFmpeg no está instalado. Por favor instala FFmpeg desde https://ffmpeg.org/download.html"
             )
         
-        # Obtener duración del video
-        duration = get_video_duration(video_path)
+        # Obtener duración del archivo
+        duration = get_media_duration(input_path)
         
-        # Verificar duración (máximo 2 minutos = 120 segundos)
-        if duration > 120:
-            raise HTTPException(status_code=400, detail="El video debe durar menos de 2 minutos")
+        # Verificar duración (máximo 30 minutos = 1800 segundos)
+        if duration > 1800:
+            raise HTTPException(status_code=400, detail="El archivo debe durar menos de 30 minutos")
         
-        # Extraer audio usando FFmpeg
+        # Detectar si es archivo de video o audio
         cmd = [
-            'ffmpeg', '-i', video_path, '-vn', '-acodec', 'pcm_s16le',
-            '-ar', '16000', '-ac', '1', '-y', audio_path
+            'ffprobe', '-v', 'quiet', '-print_format', 'json',
+            '-show_streams', input_path
         ]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        
+        import json
+        data = json.loads(result.stdout)
+        
+        # Verificar si tiene stream de video
+        has_video = any(stream.get('codec_type') == 'video' for stream in data.get('streams', []))
+        
+        if has_video:
+            # Es un archivo de video - extraer audio
+            cmd = [
+                'ffmpeg', '-i', input_path, '-vn', '-acodec', 'pcm_s16le',
+                '-ar', '16000', '-ac', '1', '-y', audio_path
+            ]
+        else:
+            # Es un archivo de audio - convertir al formato requerido
+            cmd = [
+                'ffmpeg', '-i', input_path, '-acodec', 'pcm_s16le',
+                '-ar', '16000', '-ac', '1', '-y', audio_path
+            ]
         
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode != 0:
             raise HTTPException(
                 status_code=500,
-                detail=f"Error extrayendo audio: {result.stderr}"
+                detail=f"Error procesando audio: {result.stderr}"
             )
         
         return duration
@@ -100,7 +120,7 @@ def extract_audio_from_video(video_path: str, audio_path: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error procesando video: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error procesando archivo: {str(e)}")
 
 def transcribe_audio(audio_path: str, language: str):
     """Transcribe audio usando Whisper"""
@@ -176,6 +196,55 @@ def create_vtt_file(transcription_result, output_path: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creando archivo VTT: {str(e)}")
 
+def create_clean_transcription(transcription_result, output_path: str):
+    """Convierte la transcripción a formato de texto limpio sin timestamps"""
+    try:
+        with open(output_path, 'w', encoding='utf-8') as f:
+            # Recopilar todo el texto de los segmentos
+            full_text = ""
+            for segment in transcription_result['segments']:
+                text = segment['text'].strip()
+                if text:
+                    full_text += text + " "
+            
+            # Limpiar el texto y crear párrafos más naturales
+            full_text = full_text.strip()
+            
+            # Dividir en oraciones usando puntos, signos de exclamación y interrogación
+            import re
+            sentences = re.split(r'[.!?]+', full_text)
+            
+            # Agrupar oraciones en párrafos (aproximadamente cada 3-4 oraciones)
+            paragraphs = []
+            current_paragraph = []
+            
+            for sentence in sentences:
+                sentence = sentence.strip()
+                if sentence:
+                    current_paragraph.append(sentence)
+                    
+                    # Crear nuevo párrafo cada 3-4 oraciones o si la oración es muy larga
+                    if len(current_paragraph) >= 3 or len(sentence) > 100:
+                        paragraphs.append('. '.join(current_paragraph) + '.')
+                        current_paragraph = []
+            
+            # Añadir último párrafo si queda contenido
+            if current_paragraph:
+                paragraphs.append('. '.join(current_paragraph) + '.')
+            
+            # Si no se pudieron crear párrafos, usar el texto completo
+            if not paragraphs:
+                paragraphs = [full_text]
+            
+            # Escribir párrafos separados por líneas en blanco
+            for i, paragraph in enumerate(paragraphs):
+                f.write(paragraph)
+                if i < len(paragraphs) - 1:  # No añadir línea extra al final
+                    f.write('\n\n')
+                
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creando transcripción limpia: {str(e)}")
+
 def format_timestamp(seconds):
     """Convierte segundos a formato VTT (HH:MM:SS.mmm)"""
     hours = int(seconds // 3600)
@@ -192,51 +261,83 @@ async def root():
     }
 
 @app.post("/transcribe")
-async def transcribe_video(
+async def transcribe_media(
     file: UploadFile = File(...),
-    language: str = Form(...)
+    language: str = Form(...),
+    transcription_type: str = Form("vtt")
 ):
-    """Endpoint principal para transcribir videos"""
+    """Endpoint principal para transcribir videos o audios"""
+    
+    # Debug logging para verificar parámetros recibidos
+    print(f"DEBUG - Parámetros recibidos:")
+    print(f"DEBUG - file.filename: {file.filename}")
+    print(f"DEBUG - file.content_type: {file.content_type}")
+    print(f"DEBUG - language: {language}")
+    print(f"DEBUG - transcription_type: '{transcription_type}'")
+    print(f"DEBUG - transcription_type.lower(): '{transcription_type.lower()}'")
     
     # Validar tipo de archivo
-    if not file.content_type.startswith('video/'):
-        raise HTTPException(status_code=400, detail="El archivo debe ser un video")
+    if not (file.content_type.startswith('video/') or file.content_type.startswith('audio/')):
+        raise HTTPException(status_code=400, detail="El archivo debe ser un video o audio")
     
     # Validar idioma de entrada
     if language.lower() not in ['spanish', 'english']:
         raise HTTPException(status_code=400, detail="Idioma debe ser 'spanish' o 'english'")
     
+    # Validar tipo de transcripción
+    if transcription_type.lower() not in ['vtt', 'clean']:
+        raise HTTPException(status_code=400, detail="Tipo de transcripción debe ser 'vtt' o 'clean'")
+    
     # Crear nombres de archivos temporales
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    video_filename = f"video_{timestamp}_{file.filename}"
+    input_filename = f"input_{timestamp}_{file.filename}"
     audio_filename = f"audio_{timestamp}.wav"
-    vtt_filename = f"transcription_{timestamp}.vtt"
     
-    video_path = TEMP_DIR / video_filename
+    # Determinar extensión del archivo de salida según el tipo
+    if transcription_type.lower() == "clean":
+        output_filename = f"transcription_{timestamp}.txt"
+    else:
+        output_filename = f"transcription_{timestamp}.vtt"
+    
+    input_path = TEMP_DIR / input_filename
     audio_path = TEMP_DIR / audio_filename
-    vtt_path = TEMP_DIR / vtt_filename
+    output_path = TEMP_DIR / output_filename
     
     try:
-        # Guardar video subido
-        with open(video_path, "wb") as buffer:
+        # Guardar archivo subido
+        with open(input_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # Extraer audio del video
-        duration = extract_audio_from_video(str(video_path), str(audio_path))
+        # Extraer o procesar audio
+        duration = extract_audio_or_process_audio(str(input_path), str(audio_path))
         
         # Transcribir audio
         transcription = transcribe_audio(str(audio_path), language)
         
-        # Crear archivo VTT
-        create_vtt_file(transcription, str(vtt_path))
+        # Crear archivo según el tipo solicitado
+        print(f"DEBUG - Creando archivo de transcripción...")
+        print(f"DEBUG - transcription_type.lower() == 'clean': {transcription_type.lower() == 'clean'}")
+        print(f"DEBUG - output_path: {output_path}")
+        
+        if transcription_type.lower() == "clean":
+            print(f"DEBUG - Creando transcripción limpia...")
+            create_clean_transcription(transcription, str(output_path))
+            transcription_message = "Transcripción limpia completada exitosamente"
+            print(f"DEBUG - Transcripción limpia creada exitosamente")
+        else:
+            print(f"DEBUG - Creando archivo VTT...")
+            create_vtt_file(transcription, str(output_path))
+            transcription_message = "Transcripción VTT completada exitosamente"
+            print(f"DEBUG - Archivo VTT creado exitosamente")
         
         # Retornar información de la transcripción
         return {
-            "message": "Transcripción completada exitosamente",
+            "message": transcription_message,
             "duration": round(duration, 2),
             "language": language,
+            "transcription_type": transcription_type.lower(),
             "original_segments_count": len(transcription['segments']),
-            "download_url": f"/download/{vtt_filename}"
+            "download_url": f"/download/{output_filename}"
         }
         
     except HTTPException:
@@ -245,23 +346,29 @@ async def transcribe_video(
         raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
     
     finally:
-        # Limpiar archivos temporales (excepto VTT)
-        for temp_file in [video_path, audio_path]:
+        # Limpiar archivos temporales (excepto archivo de transcripción)
+        for temp_file in [input_path, audio_path]:
             if temp_file.exists():
                 temp_file.unlink()
 
 @app.get("/download/{filename}")
-async def download_vtt(filename: str):
-    """Endpoint para descargar archivos VTT"""
+async def download_transcription(filename: str):
+    """Endpoint para descargar archivos de transcripción (VTT o TXT)"""
     file_path = TEMP_DIR / filename
     
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
     
+    # Determinar tipo de media según la extensión
+    if filename.lower().endswith('.txt'):
+        media_type = 'text/plain'
+    else:
+        media_type = 'text/vtt'
+    
     return FileResponse(
         path=str(file_path),
         filename=filename,
-        media_type='text/vtt'
+        media_type=media_type
     )
 
 @app.delete("/cleanup")
@@ -463,7 +570,7 @@ async def subtitle_video(
             shutil.copyfileobj(vtt.file, buffer)
         
         # Obtener duración del video
-        duration = get_video_duration(video_path)
+        duration = get_media_duration(video_path)
         
         # Contar subtítulos
         subtitle_count = count_vtt_subtitles(vtt_path)

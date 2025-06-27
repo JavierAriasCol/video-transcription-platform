@@ -25,7 +25,7 @@
         <div class="upload-section">
           <div class="upload-card card">
             <div class="card-header">
-              <h2 class="card-title">Subir Video</h2>
+              <h2 class="card-title">Subir Video o Audio</h2>
             </div>
 
             <!-- Selector de idioma -->
@@ -38,16 +38,24 @@
               </select>
             </div>
 
+            <!-- Tipo de transcripción -->
+            <div class="form-group">
+              <label class="form-label">
+                <input type="checkbox" id="cleanTranscription" class="checkbox-input">
+                Transcripción limpia (sin timestamps)
+              </label>
+            </div>
+
             <!-- Área de upload -->
             <div class="upload-area" id="uploadArea">
               <div class="upload-content">
                 <div class="upload-icon">📁</div>
-                <p>Arrastra tu video aquí o haz clic para seleccionar</p>
+                <p>Arrastra tu video o audio aquí o haz clic para seleccionar</p>
                 <p class="upload-hint">
-                  Máximo 2 minutos • Formatos: MP4, AVI, MOV, MKV
+                  Máximo 30 minutos • Formatos: MP4, AVI, MOV, MKV, MP3, WAV, M4A, FLAC
                 </p>
               </div>
-              <input type="file" id="videoFile" accept="video/*" hidden />
+              <input type="file" id="videoFile" accept="video/*,audio/*" hidden />
             </div>
 
             <!-- Información del archivo -->
@@ -81,11 +89,11 @@
             <div class="progress-steps">
               <div class="step" id="step1">
                 <div class="step-icon">📤</div>
-                <span>Subiendo video</span>
+                <span>Subiendo archivo</span>
               </div>
               <div class="step" id="step2">
                 <div class="step-icon">🎵</div>
-                <span>Extrayendo audio</span>
+                <span>Procesando audio</span>
               </div>
               <div class="step" id="step3">
                 <div class="step-icon">🤖</div>
@@ -93,7 +101,7 @@
               </div>
               <div class="step" id="step4">
                 <div class="step-icon">📝</div>
-                <span>Generando VTT</span>
+                <span>Generando transcripción</span>
               </div>
             </div>
             <div class="progress-bar">
