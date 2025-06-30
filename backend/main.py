@@ -110,17 +110,22 @@ def extract_audio_or_process_audio(input_path: str, audio_path: str):
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode != 0:
+            error_detail = f"Error procesando audio con FFmpeg: {result.stderr}"
+            print(f"ERROR - {error_detail}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Error procesando audio: {result.stderr}"
+                detail=error_detail
             )
         
+        print("DEBUG - FFmpeg completado exitosamente.")
         return duration
         
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error procesando archivo: {str(e)}")
+        error_detail = f"Error procesando archivo: {str(e)}"
+        print(f"ERROR - {error_detail}")
+        raise HTTPException(status_code=500, detail=error_detail)
 
 def transcribe_audio(audio_path: str, language: str):
     """Transcribe audio usando Whisper"""
@@ -134,10 +139,14 @@ def transcribe_audio(audio_path: str, language: str):
         whisper_lang = lang_map.get(language.lower(), "es")
         
         # Transcribir
+        print(f"DEBUG - Iniciando transcripción con Whisper para el idioma: {whisper_lang}")
         result = model.transcribe(audio_path, language=whisper_lang)
+        print("DEBUG - Transcripción con Whisper completada.")
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en transcripción: {str(e)}")
+        error_detail = f"Error en transcripción con Whisper: {str(e)}"
+        print(f"ERROR - {error_detail}")
+        raise HTTPException(status_code=500, detail=error_detail)
 
 def create_vtt_file(transcription_result, output_path: str):
     """Convierte la transcripción a formato VTT con máximo 5 palabras por segmento"""
@@ -240,7 +249,7 @@ def create_clean_transcription(transcription_result, output_path: str):
             for i, paragraph in enumerate(paragraphs):
                 f.write(paragraph)
                 if i < len(paragraphs) - 1:  # No añadir línea extra al final
-                    f.write('\n\n')
+                    f.write('\n')
                 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creando transcripción limpia: {str(e)}")
@@ -309,10 +318,14 @@ async def transcribe_media(
             shutil.copyfileobj(file.file, buffer)
         
         # Extraer o procesar audio
+        print(f"DEBUG - Iniciando extracción de audio para: {input_path}")
         duration = extract_audio_or_process_audio(str(input_path), str(audio_path))
+        print(f"DEBUG - Extracción de audio completada. Duración: {duration}s")
         
         # Transcribir audio
+        print(f"DEBUG - Iniciando transcripción del archivo de audio: {audio_path}")
         transcription = transcribe_audio(str(audio_path), language)
+        print("DEBUG - Transcripción completada.")
         
         # Crear archivo según el tipo solicitado
         print(f"DEBUG - Creando archivo de transcripción...")
